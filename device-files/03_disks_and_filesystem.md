@@ -20,4 +20,4 @@ nvme0n1p7
 
 #### Typical Linux Disk Schematic
 
-![Linux Disk Schematic](../device-files/linuxdiskschematic.png)
+![Linux Disk Schematic](../linuxdiskschematic.png)
