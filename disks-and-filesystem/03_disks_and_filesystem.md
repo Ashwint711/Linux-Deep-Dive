@@ -21,3 +21,15 @@ nvme0n1p7
 #### Typical Linux Disk Schematic
 
 ![Linux Disk Schematic](linuxdiskschematic.png)
+
+### Partitioning Disk Devices
+There are many kinds of partition tables. There's nothing special about a partition table -- it's just a bunch of data that says how the blocks on the disks are divided.
+
+The traditional Partition table is found under `MBR (Master Boot Record)`, the latest one is `GPT (Globally Unique Identifier Partition Table)`.
+
+#### Linux Partitioning Tools
+* `parted`
+* `gparted`
+* `fdisk`
+
+These tools are used to display, alter etc. operations on the Partition Table
