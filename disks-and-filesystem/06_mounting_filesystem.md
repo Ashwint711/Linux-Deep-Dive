@@ -114,3 +114,7 @@ mount -t ext4 /dev/nvme0n1p1 /
 ```
 umount /dev/nvmen1p1
 ```
+
+### VFS (Virtual Filesystem)
+There are `n` number of filesystem present and each have its own drivers and specific command set, now to support all of them in the Linux kernel, the kernel needs to handle the *read, write, create, etc* operations for all kinds of filesystem.
+To solve this there is one globally accepted interface introduced and that if `VFS`. With VFS applications doesn't need to worry about which specific `read` call they have to send in order to open a file on ext4 filesystem, every application knows that they can just use the standard operations provided by VFS and its the job of VFS to translate them into the filesystem specific commands.
