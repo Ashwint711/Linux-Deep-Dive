@@ -50,6 +50,8 @@ Lets say I connect a new ssd(nvme1n1) and tell about this disk to LVM:
 pvcreate /dev/nvme1n1
 ```
 
+**A normal disk partition or a Loop device can be used as a Physical Volume. The command `pvcreate /dev/loop28` makes the normal block partition or file a lvm PV. LVM uses a concept called *Physical Extend (PE)*, a PE is a block inside a PV. Just like the ext4 filesystem divided the block device into block of 4kb like that LVM divides PV into blocks and they are called Physical Extent**
+
 This command writes some LVM metadata onto `/dev/nvme1n1` disk and tells `LVM` that you can use this block device.
 
 #### Volume Group
@@ -70,3 +72,83 @@ PV2 (500 GB)
 ```
 
 **Logical volumes are just block devices, and they typically contain filesystems or swap signature, so we can think of the relationship between a volume group and its logical volume as similar to that of a disk and its partition**
+
+
+
+### LVM Hands on
+
+#### Block device
+**Using file as a block device**
+```
+dd if=/dev/zero of=/home/disk1.img bs=1M count=15360
+losetup --find
+losetup /dev/loop28 /home/disk1.img
+```
+
+#### Making the block devices Physical Volume
+```
+pvcreate /dev/loop28
+pvcreate /dev/loop29
+```
+
+```
+ashwin@thinkpad /dev/mapper % sudo pvdisplay      
+  --- Physical volume ---
+  PV Name               /dev/loop28
+  VG Name               myvg
+  PV Size               5.00 GiB / not usable 4.00 MiB
+  Allocatable           yes (but full)
+  PE Size               4.00 MiB
+  Total PE              1279
+  Free PE               0
+  Allocated PE          1279
+  PV UUID               r5gT42-sqwK-XZpR-IQ3j-Plft-bhmA-zGVwMN
+   
+  --- Physical volume ---
+  PV Name               /dev/loop29
+  VG Name               myvg
+  PV Size               15.00 GiB / not usable 4.00 MiB
+  Allocatable           yes 
+  PE Size               4.00 MiB
+  Total PE              3839
+  Free PE               254
+  Allocated PE          3585
+  PV UUID               k2Qdof-ZNCq-Nyhg-CqzB-ry83-0PWu-wbG4wf
+```
+
+#### Create Volume Group and include PVs
+```
+vgcreate myvg /dev/loop28
+vgextend myvg /dev/loop29
+```
+
+```
+ashwin@thinkpad /dev/mapper % sudo vgdisplay myvg 
+  --- Volume group ---
+  VG Name               myvg
+  System ID             
+  Format                lvm2
+  Metadata Areas        2
+  Metadata Sequence No  4
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                2
+  Open LV               2
+  Max PV                0
+  Cur PV                2
+  Act PV                2
+  VG Size               19.99 GiB
+  PE Size               4.00 MiB
+  Total PE              5118
+  Alloc PE / Size       4864 / 19.00 GiB
+  Free  PE / Size       254 / 1016.00 MiB
+  VG UUID               0KvquO-iPHB-YYJM-2Ri6-ll1Y-CtIz-ab90vS
+```
+
+#### Carve Logical Volumes from VG
+
+```
+lvcreate --size 10g --type linear -n lv1 myvgs (The type linear is default)
+lvcreate --size 9g --type linear -n lv2 myvgs
+```
