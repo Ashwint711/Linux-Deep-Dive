@@ -52,6 +52,8 @@ pvcreate /dev/nvme1n1
 
 **A normal disk partition or a Loop device can be used as a Physical Volume. The command `pvcreate /dev/loop28` makes the normal block partition or file a lvm PV. LVM uses a concept called *Physical Extend (PE)*, a PE is a block inside a PV. Just like the ext4 filesystem divided the block device into block of 4kb like that LVM divides PV into blocks and they are called Physical Extent**
 
+**The Physical Volume isn't actually divided into chunks called Physical Extents. When a partition is makde a Physical Volume so the LVM metadata is written onto the block device. Later when the PV becomes part of VG then the LVM treats the usable space as sequence of blocks (Physical Extents), the Physical Extent is the property of entire VG and not of a PV.**
+
 This command writes some LVM metadata onto `/dev/nvme1n1` disk and tells `LVM` that you can use this block device.
 
 #### Volume Group
@@ -151,4 +153,44 @@ ashwin@thinkpad /dev/mapper % sudo vgdisplay myvg
 ```
 lvcreate --size 10g --type linear -n lv1 myvgs (The type linear is default)
 lvcreate --size 9g --type linear -n lv2 myvgs
+```
+
+#### Format filesystem into LV and mount it
+```
+mkfs -t ext4 /dev/mapper/myvg-lv1
+
+mount /dev/mapper/myvg-lv1 /mnt
+```
+
+
+### Device Mapper
+
+Device Mapper is a kernel subsystem, which is a Translation Layer and it sits between Filesystem and Block device.
+
+There are 2 jobs of Device Mapper:
+#### 1. Create Device Nodes
+Whenever a new LV is created it stores that pretty LV name under `/dev/mapper/vg-lv` and the actual device node name that Device Mapper works with under `/dev/dm-*`.
+
+#### 2. Mapping Logical block to Physical Block
+Imagine kernel without *Device Mapper*, something is trying to write bytes to logical block 500 of lv1, but lv1 is just a logical layout carved on a physical(underlying) disk. So here the kernel has to maintain which logical block maps to which physical(underlying) disk block.
+
+This is the mapping problem from logical block to physical block(extent) that *Device Mapper* solves. Device Mapper maintains a mapping table.
+Simple Example:
+```
+Logical Block Range        Physical Device
+
+0 - 1279                  loop28
+
+1280 - 5119               loop29
+```
+
+
+**This is why it's called a mapper**
+It Maps
+```
+Virtual Block Device
+```
+to
+```
+real block device(s)
 ```
