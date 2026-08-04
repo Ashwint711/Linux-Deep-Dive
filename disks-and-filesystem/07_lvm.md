@@ -162,6 +162,16 @@ mkfs -t ext4 /dev/mapper/myvg-lv1
 mount /dev/mapper/myvg-lv1 /mnt
 ```
 
+#### Resize a LV
+Resize LV:
+```
+            <extent_count> <lv_name>
+lvresize -l +2602          myvg/lv1 
+```
+Adjust Filesystem to use newly added Physical Extents
+```
+fsadm -v resize /dev/mapper/myvg-lv1 {verbose mode}
+```
 
 ### Device Mapper
 
