@@ -173,6 +173,12 @@ Adjust Filesystem to use newly added Physical Extents
 fsadm -v resize /dev/mapper/myvg-lv1 {verbose mode}
 ```
 
+Shortcut:
+```
+lvsize -r -l +100%FREE myvg/lv1
+```
+
+
 ### Device Mapper
 
 Device Mapper is a kernel subsystem, which is a Translation Layer and it sits between Filesystem and Block device.
