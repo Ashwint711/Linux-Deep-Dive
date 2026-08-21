@@ -46,3 +46,10 @@ multi-user.target   display-manager.service
 ```
 
 **When Linux boots, systemd activates the default target, and that target pulls in a network of dependent units. Because units can depend on multiple other units, the structure is a graph rather than a simple parent-child tree.**
+
+### systemd Configuration
+There are 2 main directories where `systemd` configuration are stores:
+1. /lib/systemd/system or /usr/lib/systemd/system
+2. /etc/systemd/system
+
+> **Note: On Ubuntu `/lib` is symlink to `/usr/lib`.**
