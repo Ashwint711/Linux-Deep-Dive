@@ -155,8 +155,7 @@ ExecPre=/usr/sbin/sshd-keygen
 ExecStart=/usr/sbin/sshd -D $OPTIONS $CRYPTO_POLICY
 ExecReload=/bin/kill -HUP $MAINPID
 ```
-***variables ($)***
-Here 2 types of $variables are being used:
+***variables ($)*** - Here 2 types of $variables are being used:
 1. $OPTIONS and $CRYPTO_POLICY - These are normal env variables which are defined in the config file which is set as the value of `EnvironmentFile=/etc/sysconfig/sshd`.
 2. $MAINPID - This is special variable, as its not coming from the environment file, but `systemd` actually knows this variable. As we know that systemd tracks all the processes spunned up in the process of activating a service, so when `ssh.serivce` is activated and for e.g. the main process started with `PID=2500` then systemd keeps note of it, and on `ExecReload=/bin/kill -HUP $MAINPID`, systemd knows the value of `$MAINPID`.
 
@@ -174,3 +173,67 @@ Here 2 types of $variables are being used:
       ```
 
 **So Unit files essentially are configuration language through which you tell systemd what a unit is, what it depends on, and how systemd should manage it.**
+
+#### How Jobs Relate to Starting, Stopping, and Reloading Units
+To activate, deactivate, and restart units, you use the commands `systemctl start`, `systemctl stop`, and `systemctl restart`.
+However, if we've changed a unit configuration file, then we can tell systemd to reload the file in one of two ways:
+
+```
+systemctl reload unit   - Reloads configuration for that unit only
+systemctl daemon-reload - Reloads all unit configurations
+```
+
+First and for most, there are 2 parts:
+* The actual Application/Process
+* Systemd configuration of that Application/Process
+
+So for example lets say I want `myapp` application to start when the system starts, then I need to inform about this application to systemd.
+Now to start this application this command needs to executed:
+```
+/usr/bin/myapp -p <PORT>
+```
+So, I need to give instruction to systemd on how to start `myapp`. And we do that by writing `unit` file for the application.
+```
+myapp.service
+[Unit]
+Description=Dummy Application
+Documentation=documentation-path
+
+[Service]
+ExecStart=/usr/bin/myapp -p 8080
+ExecReload=/bin/kill -HUP $MAINPID
+```
+
+And lets say we need to change the `PORT` to `9090`. So we will edit the `myapp.service` file:
+```
+myapp.service
+
+[Unit]
+Description=Dummy Application
+Documentation=documentation-path
+
+[Service]
+ExecStart=/usr/bin/myapp -p 9090
+ExecReload=/bin/kill -HUP $MAINPID
+```
+
+And run:
+```
+systemctl reload myapp.service
+```
+
+But this will only change the `systemd` configuration about this service and this command alone won't restart the actual `myapp` application on a new port.
+When a service is started the systemd keeps its configuration in its memory, so whatever we change in the unit file is on the disk and not being changed in the context of systemd.
+So we explicitely need to tell `systemd` to use the new context he got with:
+```
+systemctl restart myapp.service
+```
+
+In short to re-run the application with new configuration we need to edit its unit file and run 2 commands:
+```
+systemctl reload unit
+systemctl restart unit
+```
+
+
+**A `Job` in systemd is a running task like - activating a service, deactivating a service, and restarting a service.**
