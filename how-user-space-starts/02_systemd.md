@@ -292,4 +292,5 @@ Type=<type>
    When considered started - When process exits succesfully  
 
 
-***Cgroups help systemd track which processes belong to a service. Type= helps systemd understand when that service's startup is complete.***
+***Cgroups help systemd track which processes belong to a service.     [Process Tracking]  
+Type= helps systemd understand when that service's startup is complete.[Process Synchronization]  ***
