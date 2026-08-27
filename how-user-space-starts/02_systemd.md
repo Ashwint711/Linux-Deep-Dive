@@ -237,3 +237,59 @@ systemctl restart unit
 
 
 **A `Job` in systemd is a running task like - activating a service, deactivating a service, and restarting a service.**
+
+### systemd Process Tracking and Synchronization
+
+systemd needs to answer one question and that is:
+> When can I tell that the service is ready?
+
+1. Lets say the ExecStart command runs a startup script; which is not the actual application but only a script which starts the actual Application.
+so in this case how does systemd know that at what stage it should tell that the application is started.
+
+This is the traditional `Unix Daemonize` scenario: It's when the `ExecStart` command is just the startup process which creates (`forks`) a new process/s which is actual application.
+
+2. Second case is that the command/instruction given to `ExecStart` e.g.:
+```
+[Service]
+ExecStart=/usr/bin/myapp
+...
+```
+is the actual application/process and does not forks another process. But it takes longer time to initialize the application. And lets say another service (eg. Service otherApp) depends on `myapp`.
+Then in this case when can systemd will know that the `myapp` service is ready, and give a go to `otherApp` to use `myapp`..
+
+3. Third case is when a service is just some configuration task, for example a service which creates a directory and sets some permissions, thats it.
+So in this case the service completes its task in a flash of a second, and isn't a long running process so how systemd will tell if this service is ready.
+
+4. Fourth case is when we have a service which needs to run only after systemd completes all its running jobs.
+Lets say we have a `print_critical_logs.service`; and we don't want the log messages of this services to get mixed up with other serivces logs. So in that case we need to tell systemd that start this service only when you don't have any running `Job`.
+
+5. Fifth case is when a service starts executing but the actual application/process takes time to come in the running state. So then how systemd will determine when to mark it active or not.
+
+**The reason why its very important for systemd to know the exact state of the service is dependency. Other services can be dependent of this service. And without current process coming in the running state; giving other dependent service a go would be errorounous.**
+
+Now we know that systemd in all cases needs to know when the service or the actual application is in Active/Running State. And that is told by the service itself; using a directive called:
+```
+Type=<type>
+```
+* simple :
+   What systmd expects - process stays running
+   When considered started - Almost immediately after process starts
+
+* forking :
+   What systmd expects - process forks and parent exits
+   When considered started - When original/parent process exits
+
+* notify  :
+   What systmd expects - service tells systemd it's ready
+   When considered started - When service sends readiness notification to systemd
+
+* idle :
+   What systmd expects - Like `simple`, but delayed
+   When considered started - After current jobs finish/ startup is less busy
+
+* oneshot :
+   What systmd expects - Process performs task and exits
+   When considered started - When process exits succesfully
+
+
+***Cgroups help systemd track which processes belong to a service. Type= helps systemd understand when that service's startup is complete.***
