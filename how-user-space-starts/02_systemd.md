@@ -294,3 +294,17 @@ Type=<type>
 
 ***Cgroups help systemd track which processes belong to a service.      [Process Tracking]***  
 ***Type= helps systemd understand when that service's startup is complete. [Process Synchronization]***  
+
+
+### systemd Dependencies
+
+1. Requires  
+      * Strict dependencies. When activating a unit with `Requires` dependency unit, systemd attempts to activate the dependency unit. If the dependency unit fails to activate, systemd also deactivates the dependent unit.
+      * In short if we want unit A to only start with its dependency unit(s) B & C are active. If not then don't activate A either.
+2. Wants  
+      * Dependencies for activation only. Upon activating a unit systemd activates the unit's `Wants` dependencies, but it doesn't care if those fail.
+3. Requisite  
+      * Units that must already be active. Before activating a unit with `Requisite` dependency, systemd first checks the status of the dependency. If all the `Requisite` dependencies are active only then systemd activates dependent unit.
+      * If the `Requisite` dependencies aren't already in active state then systemd fails on activation of the unit with dependency.
+4. Conlficts  
+      * Negative dependency. When activating a unit with `Conflict` dependency, systemd automatically deactivates
