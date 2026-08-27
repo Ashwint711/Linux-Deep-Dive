@@ -265,7 +265,7 @@ Lets say we have a `print_critical_logs.service`; and we don't want the log mess
 
 5. Fifth case is when a service starts executing but the actual application/process takes time to come in the running state. So then how systemd will determine when to mark it active or not.
 
-**The reason why its very important for systemd to know the exact state of the service is dependency. Other services can be dependent of this service. And without current process coming in the running state; giving other dependent service a go would be errorounous.**
+**The reason why its very important for systemd to know the exact state of the service is dependency. Other services can be dependent on this service. And without current process coming in the running state; giving other dependent service a go would be erroneous.**
 
 Now we know that systemd in all cases needs to know when the service or the actual application is in Active/Running State. And that is told by the service itself; using a directive called:
 ```
@@ -275,21 +275,21 @@ Type=<type>
    What systmd expects - process stays running
    When considered started - Almost immediately after process starts
 
-* forking :
-   What systmd expects - process forks and parent exits
-   When considered started - When original/parent process exits
+* forking :  
+   What systmd expects - process forks and parent exits  
+   When considered started - When original/parent process exits  
 
-* notify  :
-   What systmd expects - service tells systemd it's ready
-   When considered started - When service sends readiness notification to systemd
+* notify  :  
+   What systmd expects - service tells systemd it's ready  
+   When considered started - When service sends readiness notification to systemd  
 
-* idle :
-   What systmd expects - Like `simple`, but delayed
-   When considered started - After current jobs finish/ startup is less busy
+* idle :  
+   What systmd expects - Like `simple`, but delayed  
+   When considered started - After current jobs finish/ startup is less busy  
 
-* oneshot :
-   What systmd expects - Process performs task and exits
-   When considered started - When process exits succesfully
+* oneshot :  
+   What systmd expects - Process performs task and exits  
+   When considered started - When process exits succesfully  
 
 
 ***Cgroups help systemd track which processes belong to a service. Type= helps systemd understand when that service's startup is complete.***
