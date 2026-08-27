@@ -271,9 +271,9 @@ Now we know that systemd in all cases needs to know when the service or the actu
 ```
 Type=<type>
 ```
-* simple :
-   What systmd expects - process stays running
-   When considered started - Almost immediately after process starts
+* simple :  
+   What systmd expects - process stays running  
+   When considered started - Almost immediately after process starts  
 
 * forking :  
    What systmd expects - process forks and parent exits  
