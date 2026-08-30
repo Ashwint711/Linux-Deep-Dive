@@ -306,5 +306,5 @@ Type=<type>
 3. Requisite  
       * Units that must already be active. Before activating a unit with `Requisite` dependency, systemd first checks the status of the dependency. If all the `Requisite` dependencies are active only then systemd activates dependent unit.
       * If the `Requisite` dependencies aren't already in active state then systemd fails on activation of the unit with dependency.
-4. Conlficts  
-      * Negative dependency. When activating a unit with `Conflict` dependency, systemd automatically deactivates
+4. Conflicts  
+      * Negative dependency. When activating a unit with `Conflict` dependency, systemd automatically deactivates units listed in `Conflicts` dependency list.
