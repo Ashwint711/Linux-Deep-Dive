@@ -308,3 +308,60 @@ Type=<type>
       * If the `Requisite` dependencies aren't already in active state then systemd fails on activation of the unit with dependency.
 4. Conflicts  
       * Negative dependency. When activating a unit with `Conflict` dependency, systemd automatically deactivates units listed in `Conflicts` dependency list.
+
+
+
+### Ordering
+
+So far `systemd` know how to track processes, how to solve dependencies and how to synchronize units. But one thing is still missing in the configuration file that i.e. dependency resolution ordering, systemd still don't know answer to one question and that is:
+
+> In what order should these dependency units start?
+
+But, ain't the `Requires=..` directive answer to this question, as we know that the units listed in `Requires=..` filed are started and then only the dependent unit is started. That's true, but systemd doesn't resolve/activate the dependency units in order, but systemd activates units Parallely.
+
+So in `ssh.service`:
+```
+Requires=network.service
+```
+doesn't mean that the ordering will be like:
+```
+network.service
+      │
+      ▼
+ssh.service
+```
+But systemd will try to activate them parallely.
+
+So, we need a configuration directive to tell systemd in which order it needs to resolve dependeicies and activate current/dependent unit. And to solve this problem there are 2 ordering directives:
+
+1. **Before** - Which means that the current unit will activate before the listed unit(s). For example, if `Before=bar.target` appears in `foo.target`, then systemd activates `foo.target` before `bar.target`.
+
+2. **After** - Tells systemd to activate this current unit after all the unit(s) listed in the `After=..` directive are active.
+
+When we use ordering, systemd waits until a unit has an active status before activating its dependent units.
+
+One very important thing is that, `After=database.service` doesn't mean tell systemd to "Start `database.service`", but we're merely saying systemd that:  
+"If `database.service` is being started, make sure I start after it."
+```
+myapp.service
+
+[Unit]
+After=database.service
+```
+
+Above configuration of `myapp.service` won't activate `database.service`, and without it `myapp.service` will also not start, and both will be stuck in waiting. Only after due to some other unit or manual startup or `database.service` happens then systemd will start `myapp.service`.
+
+But our goal here is that systemd should first activate `database.service` and wait until its completely started, and should not start `myapp.service` parallely. So to achive that we need to use:
+```
+myapp.service
+
+[Unit]
+Requires=database.service
+After=database.service
+```
+
+systemd interpretation of above configuration:
+`Requires=database.service` - Activate `database.service`, and if it fails then deactivate `myapp.service` as well.
+`After=database.service`    - Start me after `database.service` is active.
+
+**`Requires=`/`Wants=` establish relationships; `After=`/`Before=` establish order.**
