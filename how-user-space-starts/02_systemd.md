@@ -365,3 +365,89 @@ systemd interpretation of above configuration:
 `After=database.service`    - Start me after `database.service` is active.
 
 **`Requires=`/`Wants=` establish relationships; `After=`/`Before=` establish order.**
+
+### The [Install] Section and Enabling Units
+
+So this section introuces two related but different concepts:
+1. Dependency Declaration = `Wants=..`, `Requires=..`, etc.
+2. Enabling a Unit        = `systemctl enable`
+
+**The key idea is that `[Install]` section gives `systemd` a recipe for creating the dependency relationship when you enable the unit.**
+
+Normally this is how dependency works with `Wants=..` directive.  
+Suppose we have:
+```
+test2.target
+  │
+  ▼
+test1.target
+```
+The normal way to express this is to put the dependency in `test2.target`:
+```
+test2.target
+
+[Unit]
+Description=Test 2
+Wants=test1.target
+```
+This way we are saying that; "test2.target unit wants or depends on test1.target".  
+This is the **forward/dependent-unit approach.**  
+
+But, what if we don't want to modify the dependent unit, in this case `test2.target`. Let's say it's a system-provided unit and we don't wanna modify it as upgrade in future can override our changes. But we still need to achieve the same effect.  
+And that we can do from the dependency unit i.e. from `test1.target` units side:
+
+```
+test1.target
+[Unit]
+Description=test 1
+
+[Install]
+WantedBy=test2.target
+```
+It tell systemd: "When I am enabled, make `test2.target` want me."  
+
+One important thing with `[Install]` section is that it is ignored by default by systemd, and i order to respect it we need to enable the unit with:
+```
+systemctl enable <unit>
+```
+
+We have:
+```
+[Install]
+WantedBy=test2.target
+```
+Then we run:
+```
+systemctl enable test1.target
+```
+
+Systemd essentially says:  
+      "Okay, the unit says that it will be wanted by `test2.target` unit, so i need to create appropriate relationship"
+
+And systemd creates:  
+```
+/etc/systemd/system/test2.target.wants/test1.target
+```
+which is **symbolic link** to:
+```
+/etc/systemd/system/test1.target
+```
+Conceptually:
+```
+test2.target.wants/
+       │
+       └── test1.target → /etc/systemd/system/test1.target
+```
+
+#### Why does creating a symlink creates a dependency?
+
+Systemd understands directories with names like:
+```
+foo.target.wants/
+foo.target.requires/
+```
+as dependency directories.
+
+And `systemctl enable test1.target` is essentially creating the filesystem structure that represents the relationship.
+
+**[Install] is not about installing software. It's about telling `systemctl enable` where this unit should be connected into systemd's activation graph.**
