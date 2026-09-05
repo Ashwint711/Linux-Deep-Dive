@@ -313,11 +313,11 @@ Type=<type>
 
 ### Ordering
 
-So far `systemd` know how to track processes, how to solve dependencies and how to synchronize units. But one thing is still missing in the configuration file that i.e. dependency resolution ordering, systemd still don't know answer to one question and that is:
+So far `systemd` know how to track processes, how to solve dependencies and how to synchronize units. But one thing is still missing in the configuration file which is, dependency resolution ordering, systemd still don't know the answer to one question and that is:
 
 > In what order should these dependency units start?
 
-But, ain't the `Requires=..` directive answer to this question, as we know that the units listed in `Requires=..` filed are started and then only the dependent unit is started. That's true, but systemd doesn't resolve/activate the dependency units in order, but systemd activates units Parallely.
+But, ain't the `Requires=..` directive answer to this question, as we know that the units listed in `Requires=..` are started and then only the dependent unit is started. That's true, but systemd doesn't resolve/activate the dependency units in order, but systemd activates units Parallely.
 
 So in `ssh.service`:
 ```
@@ -349,7 +349,7 @@ myapp.service
 After=database.service
 ```
 
-Above configuration of `myapp.service` won't activate `database.service`, and without it `myapp.service` will also not start, and both will be stuck in waiting. Only after due to some other unit or manual startup or `database.service` happens then systemd will start `myapp.service`.
+Above configuration of `myapp.service` won't activate `database.service`, and without it `myapp.service` will also not start, and both will be stuck in waiting. Only after due to some other unit or manual startup of `database.service` happens then systemd will start `myapp.service`.
 
 But our goal here is that systemd should first activate `database.service` and wait until its completely started, and should not start `myapp.service` parallely. So to achive that we need to use:
 ```
