@@ -451,3 +451,42 @@ as dependency directories.
 And `systemctl enable test1.target` is essentially creating the filesystem structure that represents the relationship.
 
 **[Install] is not about installing software. It's about telling `systemctl enable` where this unit should be connected into systemd's activation graph.**
+
+
+### systemd On-Demand Startup
+
+Normally, many systemd services could be started at boot and kept running even when nobody is using them. This wastes resources.
+
+systemd can instead monitor the **resource through which a service is accessed** and start the service only when that resource is actually used.
+
+For example:
+
+```
+ssh.service  → actual SSH server
+ssh.socket   → listens on port 22
+```
+
+The .socket unit can listen on port 22 while ssh.service remains inactive.
+```
+Boot
+  ↓
+ssh.socket starts
+  ↓
+systemd listens on port 22
+  ↓
+Someone connects to port 22
+  ↓
+systemd starts ssh.service
+  ↓
+ssh.service handles the connection
+```
+
+The important idea is:
+
+> **The resource can be ready before the service is running. Access to the resource becomes the trigger for starting the service.**
+
+The same idea can work with other resources too:
+
+* .socket → network socket
+* .path → file/directory changes
+* .device → device availability
